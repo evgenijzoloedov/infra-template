@@ -7,9 +7,20 @@ jobs:
       matrix:
         node-version: [ 16.16 ]
     steps:
-      - shell: bash
-        run: |
-          expr 1 + 1 > output.log
+
+      - uses: actions/checkout@v3
+      - name: Staring Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: install modules
+        run: npm install > install_modules.txt
+      - name: check linters
+        run: npm run lint > check_linters.txt
+      - name: check ts
+        run: npm run ts > check_ts.txt
+      - name: unit test
+        run: npm run test > unit_test.txt
       - name: Upload output file
         uses: actions/upload-artifact@v3
         with:
@@ -21,19 +32,19 @@ jobs:
           name: output-log-file
 
 
-#      - uses: actions/checkout@v3
-#      - name: Staring Node.js ${{ matrix.node-version }}
-#        uses: actions/setup-node@v3
-#        with:
-#          node-version: ${{ matrix.node-version }}
-#      - name: install modules
-#        run: npm install
-#      - name: check linters
-#        run: npm run lint
-#      - name: check ts
-#        run: npm run ts
-#      - name: unit test
-#        run: npm run test
+      - uses: actions/checkout@v3
+      - name: Staring Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: install modules
+        run: npm install
+      - name: check linters
+        run: npm run lint
+      - name: check ts
+        run: npm run ts
+      - name: unit test
+        run: npm run test
 #      - name: create docker image
 #        run: docker build -t "shri-ci" . --no-cache
 #      - name: run docker container on port 3000
