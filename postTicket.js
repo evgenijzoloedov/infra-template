@@ -8,10 +8,10 @@ const semverGt = require('semver/functions/gt');
 const owner = "evgenijzoloedov";
 const repo = "infra-template";
 
-const OAUTH_TOKEN = process.env.OAUTH_TOKEN || "y0_AgAAAABh5TO4AAhXegAAAADMz8pQlCUdJCt4S3iQvUAmNfQqCCfZmlU"
-const ORG_ID = process.env.ORG_ID || "7261414"
+const OAUTH_TOKEN = process.env.OAUTH_TOKEN
+const ORG_ID = process.env.ORG_ID
 
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN || "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"
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN
 const octokit = new Octokit({auth: `${GITHUB_TOKEN}`});
 
 const headersConfig = {
@@ -56,18 +56,17 @@ async function transformTagsToCommits(tags) {
         message: commit.commit.message
     }))
 
-    console.log("commits: ",commits)
 
-    // await api.patch("/",
-    //     {
-    //         "summary": `Релиз №${process.env.VERSION.slice(13)} от ${new Date().getDate()}/${new Date().getMonth() + 1}/${new Date().getUTCFullYear()}`,
-    //         "description": `<strong>Ответственный за релиз: ${process.env.GITHUB_ACTOR}</strong>
-    // Коммиты, попавшие в релиз:
-    // ${commits.map(commit => `${commit.sha} ${commit.author} ${commit.message}`).join('\n')}`
-    //     }).catch(error => console.error(error));
-    //
-    // await api.post("/comments", {
-    //     "text": `Собрали образ в тегом ${process.env.VERSION}`
-    // },).catch(error => console.error(error));
+    await api.patch("/",
+        {
+            "summary": `Релиз №${process.env.VERSION.slice(13)} от ${new Date().getDate()}/${new Date().getMonth() + 1}/${new Date().getUTCFullYear()}`,
+            "description": `<strong>Ответственный за релиз: ${process.env.GITHUB_ACTOR}</strong>
+    Коммиты, попавшие в релиз:
+    ${commits.map(commit => `${commit.sha} ${commit.author} ${commit.message}`).join('\n')}`
+        }).catch(error => console.error(error));
+
+    await api.post("/comments", {
+        "text": `Собрали образ в тегом ${process.env.VERSION}`
+    },).catch(error => console.error(error));
 
 })()
