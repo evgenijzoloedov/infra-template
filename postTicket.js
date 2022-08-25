@@ -35,7 +35,6 @@ async function transformTagsToCommits(tags) {
     });
 
     const sortedTaggedVersions = renamedTags.sort((a, b) => semverGt(a.name, b.name));
-    console.log("sortedTaggedVersions: ",sortedTaggedVersions)
     const head = 'rc-' + sortedTaggedVersions[0].name.slice(1);
     const base = 'rc-' + sortedTaggedVersions[1].name.slice(1);
 
