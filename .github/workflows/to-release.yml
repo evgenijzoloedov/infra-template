@@ -2,7 +2,7 @@ name: to-release
 on: [push]
 jobs:
   init:
-    if: ${{!startsWith( github.ref, 'refs/tags/rc-')}}
+    if: ${{startsWith( github.ref, 'refs/tags/rc-')}}
     runs-on: ubuntu-latest
     strategy:
       matrix:
