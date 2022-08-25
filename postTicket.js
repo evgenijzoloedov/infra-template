@@ -8,11 +8,15 @@ const semverGt = require('semver/functions/gt');
 const owner = "evgenijzoloedov";
 const repo = "infra-template";
 
-const octokit = new Octokit({auth: `${process.env.GITHUB_TOKEN}`});
+const OAUTH_TOKEN = process.env.OAUTH_TOKEN || "y0_AgAAAABh5TO4AAhXegAAAADMz8pQlCUdJCt4S3iQvUAmNfQqCCfZmlU"
+const ORG_ID = process.env.ORG_ID || "7261414"
+
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN || "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"
+const octokit = new Octokit({auth: `${GITHUB_TOKEN}`});
 
 const headersConfig = {
-    Authorization: `OAuth ${process.env.OAUTH_TOKEN}`,
-    "X-Org-ID": process.env.ORG_ID
+    Authorization: `OAuth ${OAUTH_TOKEN}`,
+    "X-Org-ID": ORG_ID
 }
 
 const api = axios.create({
@@ -22,12 +26,16 @@ const api = axios.create({
 
 //configs
 async function transformTagsToCommits(tags) {
+
+
+
     const renamedTags = tags.map(tag => {
         const name = 'v' + tag.name.slice(3)
         return {...tag, name}
     });
 
     const sortedTaggedVersions = renamedTags.sort((a, b) => semverGt(a.name, b.name));
+    console.log("sortedTaggedVersions: ",sortedTaggedVersions)
     const head = 'rc-' + sortedTaggedVersions[0].name.slice(1);
     const base = 'rc-' + sortedTaggedVersions[1].name.slice(1);
 
@@ -48,16 +56,18 @@ async function transformTagsToCommits(tags) {
         message: commit.commit.message
     }))
 
-    await api.patch("/",
-        {
-            "summary": `Релиз №${process.env.VERSION.slice(13)} от ${new Date().getDate()}/${new Date().getMonth() + 1}/${new Date().getUTCFullYear()}`,
-            "description": `<strong>Ответственный за релиз: ${process.env.GITHUB_ACTOR}</strong>
-    Коммиты, попавшие в релиз:
-    ${commits.map(commit => `${commit.sha} ${commit.author} ${commit.message}`).join('\n')}`
-        }).catch(error => console.error(error));
+    console.log("commits: ",commits)
 
-    await api.post("/comments", {
-        "text": `Собрали образ в тегом ${process.env.VERSION}`
-    },).catch(error => console.error(error));
+    // await api.patch("/",
+    //     {
+    //         "summary": `Релиз №${process.env.VERSION.slice(13)} от ${new Date().getDate()}/${new Date().getMonth() + 1}/${new Date().getUTCFullYear()}`,
+    //         "description": `<strong>Ответственный за релиз: ${process.env.GITHUB_ACTOR}</strong>
+    // Коммиты, попавшие в релиз:
+    // ${commits.map(commit => `${commit.sha} ${commit.author} ${commit.message}`).join('\n')}`
+    //     }).catch(error => console.error(error));
+    //
+    // await api.post("/comments", {
+    //     "text": `Собрали образ в тегом ${process.env.VERSION}`
+    // },).catch(error => console.error(error));
 
 })()
