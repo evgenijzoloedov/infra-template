@@ -27,8 +27,6 @@ const api = axios.create({
 //configs
 async function transformTagsToCommits(tags) {
 
-
-
     const renamedTags = tags.map(tag => {
         const name = 'v' + tag.name.slice(3)
         return {...tag, name}
@@ -48,6 +46,10 @@ async function transformTagsToCommits(tags) {
 
 (async () => {
     const tags = await octokit.repos.listTags({owner, repo}).then(res => res.data)
+
+    console.log("tags: ",tags)
+    console.log("GITHUB_TOKEN: ",GITHUB_TOKEN)
+
     const resCommits = await transformTagsToCommits(tags).then(res => res.data.commits)
     const commits = resCommits.map(commit => ({
         sha: commit.sha,
