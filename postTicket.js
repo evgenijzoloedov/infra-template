@@ -2,72 +2,70 @@ const axios = require('axios').default;
 const {Octokit} = require('@octokit/rest');
 const semverGt = require('semver/functions/gt');
 
-
-//configs
+const commits = [];
 
 const owner = "evgenijzoloedov";
 const repo = "infra-template";
 
-const OAUTH_TOKEN = process.env.OAUTH_TOKEN
-const ORG_ID = process.env.ORG_ID
+const octokit = new Octokit({auth: `${process.env.GITHUB_TOKEN}`});
 
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN
-const octokit = new Octokit({auth: `${GITHUB_TOKEN}`});
-
-const headersConfig = {
-    Authorization: `OAuth ${OAUTH_TOKEN}`,
-    "X-Org-ID": ORG_ID
-}
-
-const api = axios.create({
-    baseURL: "https://api.tracker.yandex.net/v2/issues/INFRA-76",
-    headers: headersConfig
-})
-
-//configs
-async function transformTagsToCommits(tags) {
-
-    const renamedTags = tags.map(tag => {
-        const name = 'v' + tag.name.slice(3)
-        return {...tag, name}
-    });
-
-    const sortedTaggedVersions = renamedTags.sort((a, b) => semverGt(a.name, b.name));
-    const head = 'rc-' + sortedTaggedVersions[0].name.slice(1);
-    const base = 'rc-' + sortedTaggedVersions[1].name.slice(1);
-
-    return octokit.repos.compareCommits({
+octokit.repos
+    .listTags({
         owner,
         repo,
-        base,
-        head,
-    });
-}
+    })
+    .then(({data: tags}) => {
 
-(async () => {
-    const tags = await octokit.repos.listTags({owner, repo}).then(res => res.data)
+        const renamedTags = tags.map(tag => {
+            const name = 'v' + tag.name.slice(3)
+            return {...tag, name}
+        });
 
-    console.log("tags: ",tags)
-    console.error("GITHUB_TOKEN: ",GITHUB_TOKEN)
+        const sortedTaggedVersions = renamedTags.sort((a, b) => semverGt(a.name, b.name));
+        const head = 'rc-' + sortedTaggedVersions[0].name.slice(1);
+        const base = 'rc-' + sortedTaggedVersions[1].name.slice(1);
 
-    const resCommits = await transformTagsToCommits(tags).then(res => res.data.commits)
-    const commits = resCommits.map(commit => ({
-        sha: commit.sha,
-        author: commit.author.login,
-        message: commit.commit.message
-    }))
-
-
-    await api.patch("/",
-        {
-            "summary": `Релиз №${process.env.VERSION.slice(13)} от ${new Date().getDate()}/${new Date().getMonth() + 1}/${new Date().getUTCFullYear()}`,
-            "description": `<strong>Ответственный за релиз: ${process.env.GITHUB_ACTOR}</strong>
+        return octokit.repos.compareCommits({
+            owner,
+            repo,
+            base,
+            head,
+        });
+    })
+    .then(({data}) => {
+        for (const commit of data.commits) {
+            commits.push({
+                sha: commit.sha,
+                author: commit.author.login,
+                message: commit.commit.message
+            })
+        }
+        axios.patch(
+            'https://api.tracker.yandex.net/v2/issues/INFRA-23',
+            {
+                "summary": `Релиз №${process.env.VERSION.slice(13)} от ${new Date().getDate()}/${new Date().getMonth() + 1}/${new Date().getUTCFullYear()}`,
+                "description": `<b>Ответственный за релиз: ${process.env.GITHUB_ACTOR}</b>
     Коммиты, попавшие в релиз:
     ${commits.map(commit => `${commit.sha} ${commit.author} ${commit.message}`).join('\n')}`
-        }).catch(error => console.error(error));
-
-    await api.post("/comments", {
-        "text": `Собрали образ в тегом ${process.env.VERSION}`
-    },).catch(error => console.error(error));
-
-})()
+            }, {
+                headers: {
+                    "Authorization": `OAuth ${process.env.OAUTH_TOKEN}`,
+                    "X-Org-ID": `${process.env.ORG_ID}`
+                }
+            }).catch(error => console.error(error));
+        axios.post(
+            'https://api.tracker.yandex.net/v2/issues/INFRA-23/comments',
+            {
+                "text": `Собрали образ в тегом ${process.env.VERSION}`
+            },
+            {
+                headers: {
+                    "Authorization": `OAuth ${process.env.OAUTH_TOKEN}`,
+                    "X-Org-ID": `${process.env.ORG_ID}`
+                }
+            }
+        ).catch(error => console.error(error));
+    })
+    .catch(err => {
+        console.error(err);
+    });
