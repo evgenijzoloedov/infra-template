@@ -1,0 +1,4 @@
+
+> template@0.1.0 lint
+> ./node_modules/.bin/eslint .
+

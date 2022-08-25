@@ -1,7 +1,8 @@
-name: learn-github-actions
+name: to-release
 on: [push]
 jobs:
   init:
+    if: ${{!startsWith( github.ref, 'refs/tags/rc-')}}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -13,23 +14,22 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - name: install modules
-        run: npm install > output.log
-      - name: check linters
-        run: npm run lint > output.log
-      - name: check ts
-        run: npm run ts > output.log
+          cache: 'npm'
+
+      - name: install node_modules
+        run: npm ci
+
+      - name: check eslint
+        run: npm run lint
+
+      - name: check types
+        run: npm run ts
+
       - name: unit test
-        run: npm run test > output.log
-      - name: Upload output file
-        uses: actions/upload-artifact@v3
-        with:
-          name: output-log-file
-          path: output.log
-      - name: Download a single artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: output-log-file
+        run: npm run test
+
+      - name: Posting ticket
+        run: VERSION=${{ github.ref }} ACTOR=${{ github.actor }} GITHUB_TOKEN=${{ github.token }} OAUTH_TOKEN = ${{ secrets.OAUTH_TOKEN }} ORG_ID = ${{ secrets.ORG_ID }}node postTicket.js
 
 
 #      - uses: actions/checkout@v3
