@@ -48,7 +48,7 @@ async function transformTagsToCommits(tags) {
     const tags = await octokit.repos.listTags({owner, repo}).then(res => res.data)
 
     console.log("tags: ",tags)
-    console.log("GITHUB_TOKEN: ",GITHUB_TOKEN)
+    console.error("GITHUB_TOKEN: ",GITHUB_TOKEN)
 
     const resCommits = await transformTagsToCommits(tags).then(res => res.data.commits)
     const commits = resCommits.map(commit => ({
