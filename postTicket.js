@@ -16,7 +16,7 @@ const headersConfig = {
 }
 
 const api = axios.create({
-    baseURL: "https://api.tracker.yandex.net/v2/issues/INFRA-76"
+    baseURL: "https://api.tracker.yandex.net/v2/issues/INFRA-76",
     headers: headersConfig
 })
 
