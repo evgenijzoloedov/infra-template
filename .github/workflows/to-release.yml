@@ -29,7 +29,7 @@ jobs:
         run: npm run test
 
       - name: Posting ticket
-        run: VERSION=${{ github.ref }} ACTOR=${{ github.actor }} GITHUB_TOKEN=${{ github.token }} OAUTH_TOKEN = ${{ secrets.OAUTH_TOKEN }} ORG_ID = ${{ secrets.ORG_ID }}node postTicket.js
+        run: VERSION=${{ github.ref }} ACTOR=${{ github.actor }} GITHUB_TOKEN=${{ github.token }} OAUTH_TOKEN=${{ secrets.OAUTH_TOKEN }} ORG_ID=${{ secrets.ORG_ID }} node postTicket.js
 
 
 #      - uses: actions/checkout@v3
